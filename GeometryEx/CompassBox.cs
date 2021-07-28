@@ -132,7 +132,7 @@ namespace GeometryEx
         }
 
         /// <summary>
-        /// X and Y dimensions of the TopoBox perimeter.
+        /// X and Y dimensions of the CompassBox perimeter.
         /// </summary>
         public double SizeX { get; }
         public double SizeY { get; }
