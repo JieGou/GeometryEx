@@ -11,7 +11,7 @@ namespace GeometryEx
     public static class Vector3Ex
     {
         /// <summary>
-        /// Find the distance from this point to the line, and output the location 
+        /// Find the distance from this point to the line, and output the location
         /// of the closest point on that line.
         /// Using formula from https://diego.assencio.com/?index=ec3d5dfdfc0b6a0d147a656f0af332bd
         /// </summary>
@@ -19,8 +19,8 @@ namespace GeometryEx
         /// <param name="closestPoint">The point on the line that is closest to this point.</param>
         public static double DistanceTo(this Vector3 point, Line line, out Vector3 closestPoint)
         {
-            var lambda = 
-                (point - line.Start).Dot(line.End - line.Start) / 
+            var lambda =
+                (point - line.Start).Dot(line.End - line.Start) /
                 (line.End - line.Start).Dot(line.End - line.Start);
             if (lambda >= 1)
             {
@@ -46,7 +46,7 @@ namespace GeometryEx
         /// <returns>
         /// A Vector3 point.
         /// </returns>
-        public static Vector3 FarthestFrom (this Vector3 point, List<Vector3> points)
+        public static Vector3 FarthestFrom(this Vector3 point, List<Vector3> points)
         {
             if (points.Count == 0)
             {
@@ -64,7 +64,7 @@ namespace GeometryEx
         public static bool IsHigherThan(this Vector3 thisPoint, Vector3 thatPoint, Vector3 normal)
         {
             var plane = new Plane(thisPoint, normal);
-            if(new Plane(thisPoint, normal).SignedDistanceTo(thatPoint) >= 0.0)
+            if (new Plane(thisPoint, normal).SignedDistanceTo(thatPoint) >= 0.0)
             {
                 return false;
             }

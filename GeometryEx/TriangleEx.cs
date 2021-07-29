@@ -58,18 +58,13 @@ namespace GeometryEx
         /// <returns>
         /// True if the Triangle vertex positions are AlmostEqual to those of the supplied Triangle.
         /// </returns>
-        public static bool IsEqualTo(this Elements.Geometry.Triangle triangle, 
+        public static bool IsEqualTo(this Elements.Geometry.Triangle triangle,
                                           Elements.Geometry.Triangle thatTriangle)
         {
             var points = triangle.Points();
-            var thosePnts = thatTriangle.Points();
-            var common = 0;
-            points.ForEach(p => common += p.Occurs(thosePnts));
-            if (common == 3)
-            {
-                return true;
-            }
-            return false;
+            var thosePoints = thatTriangle.Points();
+            // If the HashSet Except removes all of the points, then the two triangles were identical.
+            return points.Except(thosePoints).Count() == 0;
         }
 
         /// <summary>
@@ -97,7 +92,7 @@ namespace GeometryEx
         /// True if the Triangle vertex positions are AlmostEqual to those of any Triangle in the supplied List.
         /// </returns>
         public static bool IsListed(this Elements.Geometry.Triangle triangle,
-                                         List<Elements.Geometry.Triangle> triangles)
+                                         IEnumerable<Elements.Geometry.Triangle> triangles)
         {
             foreach (var entry in triangles)
             {
@@ -136,12 +131,11 @@ namespace GeometryEx
         /// <returns>
         /// A Vector3 List.
         /// </returns>
-        public static List<Vector3> Points(this Elements.Geometry.Triangle triangle)
+        public static HashSet<Vector3> Points(this Elements.Geometry.Triangle triangle)
         {
-            var points = new List<Vector3>();
-            triangle.Vertices.ToList().ForEach(v => points.Add(v.Position));
-            return points;
+            return new HashSet<Vector3>(triangle.Vertices.Select(v => v.Position), new Vector3Comparer());
         }
+
 
         /// <summary>
         /// Inserts this Triangle into a new List.
@@ -158,7 +152,7 @@ namespace GeometryEx
         /// <returns></returns>
         public static Polygon ToPolygon(this Elements.Geometry.Triangle triangle)
         {
-            var polygon = new Polygon(triangle.Points());
+            var polygon = new Polygon(triangle.Points().ToList());
             return polygon.IsClockWise() ? polygon.Reversed() : polygon;
         }
     }
