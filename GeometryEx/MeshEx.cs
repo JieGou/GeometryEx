@@ -14,9 +14,10 @@ namespace GeometryEx
         /// Adds a List of Triangles and their Vertices to the Mesh in one step, filtering for repetition.
         /// </summary>
         /// <param name="triangles">A List of Triangles</param>
-        public static int AddTriangles(this Mesh mesh, List<Triangle> triangles)
+        public static int AddTriangles(this Mesh mesh, IEnumerable<Triangle> triangles)
         {
             var added = 0;
+            invalidateEdgeCache = true;
             var meshTris = mesh.Triangles.ToList();
             foreach (var triangle in triangles)
             {
@@ -25,7 +26,10 @@ namespace GeometryEx
                     continue;
                 }
                 mesh.AddTriangle(triangle);
-                triangle.Vertices.ToList().ForEach(v => mesh.AddVertex(v));
+                foreach (var v in triangle.Vertices)
+                {
+                    mesh.AddVertex(v);
+                }
                 added++;
             }
             return added;
@@ -58,7 +62,7 @@ namespace GeometryEx
         /// </returns>
         public static List<Triangle> AdjacentTriangles(this Mesh mesh, Line edge)
         {
-            if (!edge.IsListed(mesh.Edges()))
+            if (!mesh.Edges().Contains(edge))
             {
                 return null;
             }
@@ -66,7 +70,7 @@ namespace GeometryEx
             foreach (var triangle in mesh.Triangles)
             {
                 var points = triangle.Points();
-                if (edge.Start.IsListed(points) && edge.End.IsListed(points))
+                if (points.Contains(edge.Start) && points.Contains(edge.End))
                 {
                     triangles.Add(triangle);
                 }
@@ -83,20 +87,20 @@ namespace GeometryEx
         /// </returns>
         public static List<Triangle> AdjacentTriangles(this Mesh mesh, Triangle triangle)
         {
-            var meshTris = mesh.Triangles;
+            var meshTriangles = mesh.Triangles;
             if (!triangle.IsListed(mesh.Triangles.ToList()))
             {
                 return null;
             }
             var triangles = new List<Triangle>();
             var triPoints = triangle.Points(); ;
-            foreach (var triang in mesh.Triangles)
+            foreach (var tri in mesh.Triangles)
             {
                 var common = 0;
-                triang.Points().ForEach(p => common += p.Occurs(triPoints));
+                tri.Points().Count(p => triPoints.Contains(p));
                 if (common == 2)
-                { 
-                    triangles.Add(triang);
+                {
+                    triangles.Add(tri);
                 }
             }
             return triangles;
@@ -130,7 +134,7 @@ namespace GeometryEx
                 return average;
             }
             var vectors = new List<Vector3>();
-            EdgesAt(mesh, point).ForEach(e => 
+            EdgesAt(mesh, point).ForEach(e =>
                 vectors.Add(new Vector3(e.End.X - e.Start.X, e.End.Y - e.Start.Y, e.End.Z - e.Start.Z).Unitized()));
             average = vectors[0].Average(vectors[1]);
             for (int i = 2; i < vectors.Count; i++)
@@ -180,13 +184,13 @@ namespace GeometryEx
         /// <returns>
         /// A List of Triangles.
         /// </returns>
-        public static List<Triangle> ConcaveTo(this Mesh mesh, List<Triangle> triangles, Vector3 normal)
+        public static IEnumerable<Triangle> ConcaveTo(this Mesh mesh, IEnumerable<Triangle> triangles, Vector3 normal)
         {
-            var meshTris = mesh.Triangles.ToList();
-            var concTris = new List<Triangle>(triangles);
+            var meshTriangles = new HashSet<Triangle>(mesh.Triangles, new TriangleComparer());
+            var concTriangles = new HashSet<Triangle>(triangles, new TriangleComparer());
             foreach (var triangle in triangles)
             {
-                if (!triangle.IsListed(meshTris))
+                if (!meshTriangles.Contains(triangle))
                 {
                     continue;
                 }
@@ -195,15 +199,15 @@ namespace GeometryEx
                 {
                     if (!mesh.IsConvex(edge, normal))
                     {
-                        concTris.AddRange(mesh.AdjacentTriangles(edge).Where(t => !t.IsListed(concTris)));
+                        concTriangles.UnionWith(mesh.AdjacentTriangles(edge));
                     }
                 }
             }
-            if (concTris.Count == 0 || concTris.Count == triangles.Count)
+            if (concTriangles.Count == 0 || concTriangles.Count() == triangles.Count())
             {
-                return concTris;
+                return concTriangles;
             }
-            return mesh.ConcaveTo(concTris, normal);
+            return mesh.ConcaveTo(concTriangles, normal);
         }
 
         /// <summary>
@@ -256,7 +260,7 @@ namespace GeometryEx
         /// <returns>
         /// A List of Triangles.
         /// </returns>
-        public static List<Triangle> ConvexTo(this Mesh mesh, List<Triangle> triangles, Vector3 normal)
+        public static IEnumerable<Triangle> ConvexTo(this Mesh mesh, List<Triangle> triangles, Vector3 normal)
         {
             var meshTris = mesh.Triangles.ToList();
             var convTris = new List<Triangle>(triangles);
@@ -283,7 +287,7 @@ namespace GeometryEx
         }
 
         /// <summary>
-        /// Returns the Mesh Triangle(s) that share two vertices of the supplied Triangle 
+        /// Returns the Mesh Triangle(s) that share two vertices of the supplied Triangle
         /// and which are convex to the supplied Triangle relative to the supplied normal.
         /// </summary>
         /// <param name="triangle">A Mesh triangle.</param>
@@ -299,27 +303,38 @@ namespace GeometryEx
                 return triangles;
             }
             var triPoints = triangle.Points(); ;
-            foreach (var triang in mesh.Triangles)
+            foreach (var tri in mesh.Triangles)
             {
-                var common = triang.Points().Where(p => p.IsListed(triangle.Points())).ToList();
-                if (common.Count == 2 &&
+                var common = tri.Points().Where(p => triangle.Points().Contains(p));
+                if (common.Count() == 2 &&
                     IsConvex(mesh, new Line(common.First(), common.Last()), normal))
                 {
-                    triangles.Add(triang);
+                    triangles.Add(tri);
                 }
             }
             return triangles;
         }
 
+
+        private static HashSet<Line> _cachedEdges = null;
+        private static int triangleCountAtCache = 0;
+        private static Boolean invalidateEdgeCache = true;
         /// <summary>
         /// Returns the unique edges of a Mesh as a List of Lines.
         /// </summary>
         /// <returns>A List of Lines.</returns>
-        public static List<Line> Edges(this Mesh mesh)
+        public static HashSet<Line> Edges(this Mesh mesh)
         {
-            var edges = new List<Line>();
-            mesh.Triangles.ToList().ForEach(t => edges.AddRange(t.Edges().Where(e => !e.IsListed(edges))));
-            return edges;
+            if (_cachedEdges == null
+                || triangleCountAtCache != mesh.Triangles.Count()
+                || invalidateEdgeCache)
+            {
+                _cachedEdges = new HashSet<Line>(mesh.Triangles.SelectMany(t => t.Edges()), new LineComparer(4));
+                invalidateEdgeCache = false;
+                triangleCountAtCache = mesh.Triangles.Count();
+            }
+
+            return _cachedEdges;
         }
 
         /// <summary>
@@ -380,7 +395,7 @@ namespace GeometryEx
         }
 
         /// <summary>
-        /// Returns ordered Lists of perimeter edges from a Mesh. 
+        /// Returns ordered Lists of perimeter edges from a Mesh.
         /// There is no guarantee of directionality, only spatially sequential lines.
         /// </summary>
         /// <returns>
@@ -478,7 +493,7 @@ namespace GeometryEx
         /// </returns>
         public static bool IsConcave(this Mesh mesh, Line edge, Vector3 normal)
         {
-            if (!edge.IsListed(mesh.Edges()))
+            if (!mesh.Edges().Contains(edge))
             {
                 return false;
             }
@@ -549,7 +564,7 @@ namespace GeometryEx
         /// </returns>
         public static bool IsConvex(this Mesh mesh, Line edge, Vector3 normal)
         {
-            if (!edge.IsListed(mesh.Edges()))
+            if (!mesh.Edges().Contains(edge))
             {
                 return false;
             }
@@ -620,7 +635,7 @@ namespace GeometryEx
         /// </returns>
         public static bool IsFlat(this Mesh mesh, Line edge)
         {
-            if (!edge.IsListed(mesh.Edges()))
+            if (!mesh.Edges().Contains(edge))
             {
                 return false;
             }
@@ -657,7 +672,7 @@ namespace GeometryEx
             }
             return true;
         }
-        
+
         /// <summary>
         /// Tests the spatial relationship of the supplied mesh point with adjacent points and a supplied normal to recursively discover the "lowest" connected point with reference to the supplied normal.
         /// </summary>
@@ -793,7 +808,7 @@ namespace GeometryEx
         /// </returns>
         public static List<Vector3> ThirdPoints(this Mesh mesh, Line edge)
         {
-            if (!edge.IsListed(mesh.Edges()))
+            if (!mesh.Edges().Contains(edge))
             {
                 return null;
             }
@@ -801,7 +816,7 @@ namespace GeometryEx
             foreach (var triangle in mesh.Triangles)
             {
                 var points = triangle.Points(); ;
-                if (edge.Start.IsListed(points) && edge.End.IsListed(points))
+                if (points.Contains(edge.Start) && points.Contains(edge.End))
                 {
                     thirdPoints.AddRange(points.Where(p => !edge.Start.IsAlmostEqualTo(p) && !edge.End.IsAlmostEqualTo(p)));
                 }
@@ -836,7 +851,7 @@ namespace GeometryEx
             indexedVertices.triangles = new List<List<int>>();
             indexedVertices.vertices = new List<Vertex>();
             var i = 0;
-            foreach(var point in mesh.PointsBoundary())
+            foreach (var point in mesh.PointsBoundary())
             {
                 indexedVertices.vertices.Add(
                     new Vertex
@@ -858,7 +873,7 @@ namespace GeometryEx
                     });
                 i++;
             }
-            foreach(var triangle in mesh.Triangles)
+            foreach (var triangle in mesh.Triangles)
             {
                 var indices = new List<int>();
                 triangle.Vertices.ToList().ForEach(
