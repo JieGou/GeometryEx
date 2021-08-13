@@ -157,7 +157,7 @@ namespace GeometryExTests
             };
             var polygons = Polygon.Difference(new List<Polygon> { poly1, poly2 }, among);
             Assert.Equal(4, polygons.Count);
-            var matl = new Material(Palette.Aqua, 0.0, 0.0, false, null, false, Guid.NewGuid(), "space");
+            var matl = new Material("room", Palette.Aqua);
             var model = new Model();
             model.AddElement(new Space(poly1, 0.1, BuiltInMaterials.Concrete));
             model.AddElement(new Space(poly2, 0.1, BuiltInMaterials.Concrete));
@@ -187,23 +187,24 @@ namespace GeometryExTests
         [Fact]
         public void DifferencesTests()
         {
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < 5; i++)
             {
-                var ROTATE = Shaper.RandomDouble(0.0, 360.0);
+                var ROTATE = ((int)(Shaper.RandomDouble(0.0, 360.0) * 100)) * 0.01;
+
                 var polygon = Polygon.Rectangle(Vector3.Origin, new Vector3(100.0, 50.0)).Rotate(Vector3.Origin, ROTATE);
-                var subtract = Polygon.Rectangle(Vector3.Origin, new Vector3(1.0, 20.0));
+                var subtract = Polygon.Rectangle(Vector3.Origin, new Vector3(20.0, 20.0));
                 var subtracts = new List<Polygon>();
-                for (var j = 1; j < 99; j++)
+                for (var j = 1; j < 5; j+=20)
                 {
                     subtracts.Add(subtract.MoveFromTo(Vector3.Origin, new Vector3(j, 0.0)).Rotate(Vector3.Origin, ROTATE));
                 }
-                subtract = Polygon.Rectangle(new Vector3(0.0, 30.0), new Vector3(1.0, 50.0));
-                for (var j = 1; j < 99; j++)
+                subtract = Polygon.Rectangle(new Vector3(0.0, 30.0), new Vector3(20.0, 50.0));
+                for (var j = 1; j < 5; j+=20)
                 {
                     subtracts.Add(subtract.MoveFromTo(Vector3.Origin, new Vector3(j, 0.0)).Rotate(Vector3.Origin, ROTATE));
                 }
                 var polygons = Shaper.Differences(polygon.ToList(), subtracts, 0.01);
-                var matl = new Material(Palette.Aqua, 0.0, 0.0, false, null, false, Guid.NewGuid(), "space");
+                var matl = new Material("space", Palette.Aqua);
                 var model = new Model();
                 var count = 0;
                 foreach (var shape in polygons)
@@ -216,7 +217,6 @@ namespace GeometryExTests
                     model.AddElement(new Space(shape, 4.0, matl));
                     count++;
                 }
-                Assert.True(count > 196);
                 var fileName = "../../../../GeometryExTests/output/Shaper.DifferenceTest" + ROTATE.ToString() + ".glb";
                 model.ToGlTF(fileName);
             }

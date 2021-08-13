@@ -429,7 +429,7 @@ namespace GeometryExTests
             var model = new Model();
             foreach (var polygon in jigsaw)
             {
-                model.AddElement(new Space(polygon, 4.0, new Material(Palette.Aqua, 0.0f, 0.0f, false, null, false, Guid.NewGuid(), "room")));
+                model.AddElement(new Space(polygon, 4.0, new Material("room", Palette.Aqua)));
             }
             model.ToGlTF("../../../../GeometryExTests/output/polygon.Jigsaw.glb");
         }
@@ -605,7 +605,7 @@ namespace GeometryExTests
             corridors = Shaper.Merge(corridors);
             foreach (var corridor in corridors)
             {
-                model.AddElement(new Space(corridor, 4.0, new Material(Palette.Aqua, 0.0f, 0.0f, false, null, false, Guid.NewGuid(), "corridor")));
+                model.AddElement(new Space(corridor, 4.0, new Material("room", Palette.Aqua)));
             }
             model.ToGlTF("../../../../GeometryExTests/output/polygon.Spine.glb");
         }

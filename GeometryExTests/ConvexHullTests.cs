@@ -27,7 +27,7 @@ namespace GeometryExTests
                     new Vector3(9.0, 11.0),
                     new Vector3(6.0, 4.0)
                 };
-            points = ConvexHull.MakeHull(points);
+            points = GeometryEx.ConvexHull.MakeHull(points);
             Assert.Equal(8.0, points.Count);
         }
     }

@@ -93,11 +93,10 @@ namespace GeometryEx
                 return null;
             }
             var triangles = new List<Triangle>();
-            var triPoints = triangle.Points(); ;
+            var triPoints = triangle.Points();
             foreach (var tri in mesh.Triangles)
             {
-                var common = 0;
-                tri.Points().Count(p => triPoints.Contains(p));
+                var common = tri.Points().Count(p => triPoints.Contains(p));
                 if (common == 2)
                 {
                     triangles.Add(tri);
@@ -177,12 +176,12 @@ namespace GeometryEx
         }
 
         /// <summary>
-        /// Returns a List of Triangles concave relative to the supplied List of Triangles and a normal.
+        /// Returns an IEnumerable of Triangles concave relative to the supplied List of Triangles and a normal.
         /// </summary>
-        /// <param name="triangles">A List of Triangles in the Mesh.</param>
+        /// <param name="triangles">An IEnumerable of Triangles in the Mesh.</param>
         /// <param name="normal">A Vector normal.</param>
         /// <returns>
-        /// A List of Triangles.
+        /// An IEnumerable of Triangles.
         /// </returns>
         public static IEnumerable<Triangle> ConcaveTo(this Mesh mesh, IEnumerable<Triangle> triangles, Vector3 normal)
         {
@@ -320,7 +319,7 @@ namespace GeometryEx
         private static int triangleCountAtCache = 0;
         private static Boolean invalidateEdgeCache = true;
         /// <summary>
-        /// Returns the unique edges of a Mesh as a List of Lines.
+        /// Returns the unique edges of a Mesh as a HashSet of Lines.
         /// </summary>
         /// <returns>A List of Lines.</returns>
         public static HashSet<Line> Edges(this Mesh mesh)

@@ -286,21 +286,21 @@ namespace GeometryExTests
             modelIn.AddElement(new MeshElement(meshIn, BuiltInMaterials.Glass));
             triangles.ForEach(t =>
             {
-                var points = t.Points();
+                var points = t.Points().ToList();
                 modelIn.AddElement(new ModelCurve(new Line(points[0], points[1]), lineMatl, null));
                 modelIn.AddElement(new ModelCurve(new Line(points[1], points[2]), lineMatl, null));
                 modelIn.AddElement(new ModelCurve(new Line(points[2], points[0]), lineMatl, null));
             });
             modelIn.ToGlTF("../../../output/concaveToInput.glb");
 
-            var conTris = meshIn.ConcaveTo(meshIn.AdjacentTriangles(new Line(vtx05.Position, vtx09.Position)), Vector3.ZAxis);
+            var conTris = meshIn.ConcaveTo(meshIn.AdjacentTriangles(new Line(vtx05.Position, vtx09.Position)), Vector3.ZAxis).ToList();
             var meshOut = new Mesh();
             meshOut.AddTriangles(conTris);
             var modelOut = new Model();
             modelOut.AddElement(new MeshElement(meshOut, BuiltInMaterials.Glass));
             conTris.ForEach(t =>
             {
-                var points = t.Points();
+                var points = t.Points().ToList();
                 modelOut.AddElement(new ModelCurve(new Line(points[0], points[1]), lineMatl, null));
                 modelOut.AddElement(new ModelCurve(new Line(points[1], points[2]), lineMatl, null));
                 modelOut.AddElement(new ModelCurve(new Line(points[2], points[0]), lineMatl, null));
@@ -431,21 +431,21 @@ namespace GeometryExTests
             modelIn.AddElement(new MeshElement(meshIn, BuiltInMaterials.Glass));
             triangles.ForEach(t =>
             {
-                var points = t.Points();
+                var points = t.Points().ToList();
                 modelIn.AddElement(new ModelCurve(new Line(points[0], points[1]), lineMatl, null));
                 modelIn.AddElement(new ModelCurve(new Line(points[1], points[2]), lineMatl, null));
                 modelIn.AddElement(new ModelCurve(new Line(points[2], points[0]), lineMatl, null));
             });
             modelIn.ToGlTF("../../../output/convexToInput.glb");
 
-            var conTris = meshIn.ConvexTo(meshIn.AdjacentTriangles(new Line(vtx02.Position, vtx03.Position)), Vector3.ZAxis);
+            var conTris = meshIn.ConvexTo(meshIn.AdjacentTriangles(new Line(vtx02.Position, vtx03.Position)), Vector3.ZAxis).ToList();
             var meshOut = new Mesh();
             meshOut.AddTriangles(conTris);
             var modelOut = new Model();
             modelOut.AddElement(new MeshElement(meshOut, BuiltInMaterials.Glass));
             conTris.ForEach(t =>
             {
-                var points = t.Points();
+                var points = t.Points().ToList();
                 modelOut.AddElement(new ModelCurve(new Line(points[0], points[1]), lineMatl, null));
                 modelOut.AddElement(new ModelCurve(new Line(points[1], points[2]), lineMatl, null));
                 modelOut.AddElement(new ModelCurve(new Line(points[2], points[0]), lineMatl, null));
@@ -1323,7 +1323,7 @@ namespace GeometryExTests
             modelIn.AddElement(new MeshElement(meshIn, BuiltInMaterials.Glass));
             triangles.ForEach(t =>
             {
-                var points = t.Points();
+                var points = t.Points().ToList();
                 modelIn.AddElement(new ModelCurve(new Line(points[0], points[1]), lineMatl, null));
                 modelIn.AddElement(new ModelCurve(new Line(points[1], points[2]), lineMatl, null));
                 modelIn.AddElement(new ModelCurve(new Line(points[2], points[0]), lineMatl, null));
