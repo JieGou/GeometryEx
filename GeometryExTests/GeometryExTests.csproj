@@ -7,11 +7,11 @@
 
     <Copyright />
 
-    <Version>2.7</Version>
+    <Version>3.0</Version>
 
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 
-    <AssemblyVersion>2.7.0.0</AssemblyVersion>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>

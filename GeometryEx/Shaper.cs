@@ -177,37 +177,22 @@ namespace GeometryEx
         /// </returns>
         public static List<Polygon> Differences(List<Polygon> polygons, List<Polygon> diffs, double tolerance = 0.01)
         {
-            diffs = Merge(diffs);
             var differs = new List<Polygon>();
-            var clipper = new Clipper();
             foreach (var polygon in polygons)
             {
-                clipper.AddPath(polygon.PolygonToClipper(), PolyType.ptSubject, true);
+                differs.AddRange(polygon.Difference(diffs));
             }
-            foreach (var differ in diffs)
+            var solution = new List<Polygon>();
+            foreach (var polygon in differs)
             {
-                clipper.AddPath(differ.PolygonToClipper(), PolyType.ptClip, true);
-            }
-            var solution = new List<List<IntPoint>>();
-            clipper.Execute(ClipType.ctDifference, solution, PolyFillType.pftNonZero);
-            if (solution.Count == 0)
-            {
-                return differs;
-            }
-            foreach (var path in solution)
-            {
-                var diff = PolygonFromClipper(path);
-                if (diff == null)
+                if (polygon.IsClockWise())
                 {
+                    solution.Add(polygon.Reversed());
                     continue;
                 }
-                if (diff.IsClockWise())
-                {
-                    diff = diff.Reversed();
-                }
-                differs.Add(diff);
+                solution.Add(polygon);
             }
-            return differs.Where(p => p.Area() > tolerance).OrderByDescending(p => p.Area()).ToList();
+            return solution.Where(p => p.Area() > tolerance).OrderByDescending(p => p.Area()).ToList();
         }
 
         /// <summary>

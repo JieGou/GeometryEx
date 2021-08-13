@@ -125,11 +125,11 @@ namespace GeometryEx
         }
 
         /// <summary>
-        /// Returns the Vector3 Vertex Positions of the triangle.
+        /// Returns a HashSet of Vector3 Vertex Positions of the triangle.
         /// </summary>
         /// <param name="triangle"></param>
         /// <returns>
-        /// A Vector3 List.
+        /// A Vector3 HashSet.
         /// </returns>
         public static HashSet<Vector3> Points(this Elements.Geometry.Triangle triangle)
         {
