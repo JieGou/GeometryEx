@@ -709,9 +709,14 @@ namespace GeometryExTests
             var valleys = new List<Line>();
             foreach (var e in edges)
             {
-                if (mesh.IsConcave(e, Vector3.ZAxis))
+                if (mesh.IsConcave(e, Vector3.ZAxis, out var adjacent))
                 {
                     valleys.Add(e);
+                }
+
+                foreach(var a in adjacent)
+                {
+                    Assert.True(a.Vertices.Any(v => v.Position == e.Start || v.Position == e.End));      
                 }
             }
             Assert.Equal(10, valleys.Count);
@@ -780,9 +785,15 @@ namespace GeometryExTests
             var line1 = new Line(new Vector3(2.0, 2.0, 12.0), new Vector3(9.0, 2.0, 12.0));
             var line2 = new Line(new Vector3(5.0, 4.0, 14.0), new Vector3(5.0, 11.0, 14.0));
             var line3 = new Line(new Vector3(9.0, 13.0, 12.0), new Vector3(2.0, 13.0, 12.0));
-            Assert.False(mesh.IsConvex(line1, Vector3.ZAxis));
-            Assert.True(mesh.IsConvex(line2, Vector3.ZAxis));
-            Assert.False(mesh.IsConvex(line3, Vector3.ZAxis));
+            var line4 = new Line(new Vector3(5.0, 4.0, 14.0), new Vector3(9.0, 2.0, 12.0));
+            Assert.False(mesh.IsConvex(line1, Vector3.ZAxis, out var adjacent));
+            Assert.Single(adjacent);
+            Assert.True(mesh.IsConvex(line2, Vector3.ZAxis, out adjacent));
+            Assert.Single(adjacent);
+            Assert.False(mesh.IsConvex(line3, Vector3.ZAxis, out adjacent));
+            Assert.Single(adjacent);
+            Assert.True(mesh.IsConvex(line4, Vector3.ZAxis, out adjacent));
+            Assert.Equal(2, adjacent.Count);
         }
 
         [Fact]
