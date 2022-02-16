@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using Elements.Geometry;
+using Elements;
 
 namespace GeometryEx
 {
@@ -155,7 +156,7 @@ namespace GeometryEx
             var lowLines = new List<Line>();
             foreach (var edge in mesh.Edges())
             {
-                if (mesh.IsConcave(edge, normal))
+                if (mesh.IsConcave(edge, normal, out _))
                 {
                     lowLines.Add(edge);
                 }
@@ -185,28 +186,31 @@ namespace GeometryEx
         /// </returns>
         public static IEnumerable<Triangle> ConcaveTo(this Mesh mesh, IEnumerable<Triangle> triangles, Vector3 normal)
         {
-            var meshTriangles = new HashSet<Triangle>(mesh.Triangles, new TriangleComparer());
-            var concTriangles = new HashSet<Triangle>(triangles, new TriangleComparer());
-            foreach (var triangle in triangles)
+            var concave = new HashSet<Triangle>(triangles, new TriangleComparer());
+            IEnumerable<Triangle> thisLayer = triangles;
+            while (thisLayer.Any())
             {
-                if (!meshTriangles.Contains(triangle))
+                List<Triangle> nextLayer = new List<Triangle>();
+                foreach (var triangle in thisLayer)
                 {
-                    continue;
-                }
-                var edges = triangle.Edges();
-                foreach (var edge in edges)
-                {
-                    if (!mesh.IsConvex(edge, normal))
+                    foreach (var edge in triangle.Edges())
                     {
-                        concTriangles.UnionWith(mesh.AdjacentTriangles(edge));
+                        if (!mesh.IsConvex(edge, normal, out var adjacent))
+                        {
+                            foreach (var adjTri in adjacent)
+                            {
+                                if (!concave.Contains(adjTri))
+                                {
+                                    concave.Add(adjTri);
+                                    nextLayer.Add(adjTri);
+                                }
+                            }
+                        }
                     }
                 }
+                thisLayer = nextLayer;
             }
-            if (concTriangles.Count == 0 || concTriangles.Count() == triangles.Count())
-            {
-                return concTriangles;
-            }
-            return mesh.ConcaveTo(concTriangles, normal);
+            return concave;
         }
 
         /// <summary>
@@ -272,9 +276,9 @@ namespace GeometryEx
                 var edges = triangle.Edges();
                 foreach (var edge in edges)
                 {
-                    if (!mesh.IsConcave(edge, normal))
+                    if (!mesh.IsConcave(edge, normal, out var adjacent))
                     {
-                        convTris.AddRange(mesh.AdjacentTriangles(edge).Where(t => !t.IsListed(convTris)));
+                        convTris.AddRange(adjacent.Where(t => !t.IsListed(convTris)));
                     }
                 }
             }
@@ -306,7 +310,7 @@ namespace GeometryEx
             {
                 var common = tri.Points().Where(p => triangle.Points().Contains(p));
                 if (common.Count() == 2 &&
-                    IsConvex(mesh, new Line(common.First(), common.Last()), normal))
+                    IsConvex(mesh, new Line(common.First(), common.Last()), normal, out _))
                 {
                     triangles.Add(tri);
                 }
@@ -487,11 +491,13 @@ namespace GeometryEx
         /// </summary>
         /// <param name="edge">A Line representing an edge of this Mesh.</param>
         /// <param name="normal">A vector to compare adjacent triangle normals.</param>
+        /// <param name="adjacent">A list of adjacent triangles for given edge calculated by the function.</param>
         /// <returns>
         /// True if the edge is concave relative to the adjoining triangles or the supplied normal.
         /// </returns>
-        public static bool IsConcave(this Mesh mesh, Line edge, Vector3 normal)
+        public static bool IsConcave(this Mesh mesh, Line edge, Vector3 normal, out List<Triangle> adjacent)
         {
+            adjacent = null;
             if (!mesh.Edges().Contains(edge))
             {
                 return false;
@@ -499,10 +505,10 @@ namespace GeometryEx
             var nDir = new Line(edge.End, normal, normal.Length());
             normal = nDir.End;
             var plane = new Plane(edge.Start, edge.End, normal);
-            var triangles = mesh.AdjacentTriangles(edge);
+            adjacent = mesh.AdjacentTriangles(edge);
             var intersects = 0;
             var parallels = 0;
-            foreach (var triangle in triangles)
+            foreach (var triangle in adjacent)
             {
                 var polygon = triangle.ToPolygon();
                 var ray = new Ray(polygon.Centroid(), polygon.Normal());
@@ -511,7 +517,10 @@ namespace GeometryEx
                 {
                     parallels++;
                 }
-                if (ray.Intersects(plane, out var v, out var d))
+
+                //Ignore face if its normal is parallel to the plane with less than 0,001 degree tolerance
+                if (!ray.Direction.Unitized().Dot(plane.Normal).ApproximatelyEquals(0) &&
+                    ray.Intersects(plane, out var v, out var d))
                 {
                     intersects++;
                 }
@@ -520,7 +529,7 @@ namespace GeometryEx
             {
                 return true;
             }
-            if (intersects < triangles.Count)
+            if (intersects < adjacent.Count)
             {
                 return false;
             }
@@ -558,11 +567,13 @@ namespace GeometryEx
         /// </summary>
         /// <param name="edge">A Line representing an edge of this Mesh.</param>
         /// <param name="normal">A vector to compare adjacent triangle normals.</param>
+        /// <param name="adjacent">A list of adjacent triangles for given edge calculated by the function.</param>
         /// <returns>
         /// True if the edge is convex relative to the adjoining triangles or the supplied normal.
         /// </returns>
-        public static bool IsConvex(this Mesh mesh, Line edge, Vector3 normal)
+        public static bool IsConvex(this Mesh mesh, Line edge, Vector3 normal, out List<Triangle> adjacent)
         {
+            adjacent = null;
             if (!mesh.Edges().Contains(edge))
             {
                 return false;
@@ -570,10 +581,10 @@ namespace GeometryEx
             var nDir = new Line(edge.End, normal, normal.Length());
             normal = nDir.End;
             var plane = new Plane(edge.Start, edge.End, normal);
-            var triangles = mesh.AdjacentTriangles(edge);
+            adjacent = mesh.AdjacentTriangles(edge);
             var intersects = 0;
             var parallels = 0;
-            foreach (var triangle in triangles)
+            foreach (var triangle in adjacent)
             {
                 var polygon = triangle.ToPolygon();
                 var ray = new Ray(polygon.Centroid(), polygon.Normal());
@@ -582,7 +593,10 @@ namespace GeometryEx
                 {
                     parallels++;
                 }
-                if (ray.Intersects(plane, out var v, out var d))
+
+                //Ignore face if its normal is parallel to the plane with less than 0,001 degree tolerance
+                if (!ray.Direction.Unitized().Dot(plane.Normal).ApproximatelyEquals(0) &&
+                    ray.Intersects(plane, out var v, out var d))
                 {
                     intersects++;
                 }
