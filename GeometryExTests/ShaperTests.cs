@@ -363,7 +363,7 @@ namespace GeometryExTests
                     new Vector3(6.0, 0.0),
                 };
             var polygon = Shaper.MakePolygon(points);
-            Assert.Equal(7, polygon.Vertices.Count);
+            Assert.Equal(9, polygon.Vertices.Count);
         }
 
         [Fact]
