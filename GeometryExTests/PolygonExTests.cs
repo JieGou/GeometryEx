@@ -579,10 +579,13 @@ namespace GeometryExTests
         [Fact]
         public void Skeleton()
         {
+            //<image url="$(ProjectDir)\DocumentImages\LSkeleton.png"/>
             var skeleton = ShapeMaker.L(Vector3.Origin, new Vector3(100.0, 100.0), 25.0).Skeleton();
             Assert.Equal(8, skeleton.Count);
+            //<image url="$(ProjectDir)\DocumentImages\CSkeleton.png"/>
             skeleton = ShapeMaker.C(Vector3.Origin, new Vector3(100.0, 100.0), 25.0).Skeleton();
             Assert.Equal(11, skeleton.Count);
+            //<image url="$(ProjectDir)\DocumentImages\crossSkeleton.png"/>
             skeleton = ShapeMaker.X(Vector3.Origin, new Vector3(100.0, 100.0), 25.0).Skeleton();
             Assert.Equal(16, skeleton.Count);
         }
