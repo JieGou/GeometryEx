@@ -340,7 +340,7 @@ namespace GeometryExTests
             var intersects = Shaper.Intersections(polygons, inters);
             Assert.Equal(2, intersects.Count);
         }
-
+        //<image url="$(ProjectDir)\DocumentImages\MakePolygonNeedOptimization.png"/>
         [Fact]
         public void MakePolygon()
         {
@@ -364,6 +364,29 @@ namespace GeometryExTests
                 };
             var polygon = Shaper.MakePolygon(points);
             Assert.Equal(9, polygon.Vertices.Count);
+        }
+        //<image url="$(ProjectDir)\DocumentImages\MakePolygonOrderedPoints.png"/>
+        [Fact]
+        public void MakePolygonNew()
+        {
+            var points =
+                new List<Vector3>
+                {
+                    new Vector3(13.0, 4.0),
+                    new Vector3(13.0, 7.0),
+                    new Vector3(9.0, 7.0),
+                    new Vector3(9.0, 11.0),
+                    new Vector3(6.0, 11.0),
+                    new Vector3(6.0, 7.0),
+                    new Vector3(2.0, 7.0),
+                    new Vector3(2.0, 4.0),
+                    new Vector3(6.0, 4.0),
+                    new Vector3(6.0, 0.0),
+                    new Vector3(9.0, 0.0),
+                    new Vector3(9.0, 4.0),
+                };
+            var polygon = Shaper.MakePolygon(points);
+            Assert.Equal(12, polygon.Vertices.Count);
         }
 
         [Fact]

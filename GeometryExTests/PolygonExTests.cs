@@ -579,6 +579,12 @@ namespace GeometryExTests
         [Fact]
         public void Skeleton()
         {
+            var rectangle = Polygon.Rectangle(Vector3.Origin, new Vector3(100.0, 50.0));
+            //<image url="$(ProjectDir)\DocumentImages\RectangleSkeleton.png"/>
+            var recSkeleton = rectangle.Skeleton();
+            var square = Polygon.Rectangle(Vector3.Origin, new Vector3(100.0, 100.0));
+            //<image url="$(ProjectDir)\DocumentImages\SquareSkeleton.png"/>
+            var squareSkeleton = square.Skeleton();
             //<image url="$(ProjectDir)\DocumentImages\LSkeleton.png"/>
             var skeleton = ShapeMaker.L(Vector3.Origin, new Vector3(100.0, 100.0), 25.0).Skeleton();
             Assert.Equal(8, skeleton.Count);
